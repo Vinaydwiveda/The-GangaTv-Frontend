@@ -1,12 +1,17 @@
-
 import React, { useContext, useEffect, useState } from "react";
 import img from "../assets/gangatv.png";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
 import { fetchSettings } from "../services/settings.service";
 
-
-const NAV = ["Home","Local News","International","Sports","Entertainment","Politics"];
+const NAV = [
+  { label: "Home", path: "/" },
+  { label: "Local News", path: "/category/local" },
+  { label: "International", path: "/category/international" },
+  { label: "Sports", path: "/category/sports" },
+  { label: "Entertainment", path: "/category/entertainment" },
+  { label: "Politics", path: "/category/politics" },
+];
 
 export default function Header() {
   const [open, setOpen] = useState(false);
@@ -21,27 +26,24 @@ export default function Header() {
       .catch(() => setSettings(null));
   }, []);
 
-
-  function handleAuthClick() {
+  const handleAuthClick = () => {
     if (user) {
       logout();
       navigate("/");
     } else {
       navigate("/login");
     }
-  }
+  };
 
   return (
     <header className="header">
-
       {/* TOP BAR */}
       <div className="topbar container">
-
-        {/* LEFT BRAND */}
+        {/* BRAND */}
         <div className="brand">
           <img
             src={settings?.logo || img}
-            alt="logo"
+            alt="The Ganga TV News Logo"
             style={{ width: "120px" }}
           />
 
@@ -60,7 +62,13 @@ export default function Header() {
           />
 
           {user && (
-            <span style={{ fontSize: 13, color: "#555", marginRight: 8 }}>
+            <span
+              style={{
+                fontSize: 13,
+                color: "#555",
+                marginRight: 8,
+              }}
+            >
               Hi, {user.name}
             </span>
           )}
@@ -80,34 +88,43 @@ export default function Header() {
           )}
         </div>
 
-        {/* HAMBURGER */}
-        <button className="hamburger" onClick={() => setOpen(!open)}>
+        {/* MOBILE MENU */}
+        <button
+          className="hamburger"
+          onClick={() => setOpen(!open)}
+          aria-label="Toggle Menu"
+        >
           ☰
         </button>
       </div>
 
-      {/* NAV */}
+      {/* NAVIGATION */}
       <nav className={`nav ${open ? "open" : ""}`}>
         <div className="container nav-inner">
-          {NAV.map(n => <a key={n} href="#">{n}</a>)}
+          {NAV.map((item) => (
+            <Link key={item.label} to={item.path}>
+              {item.label}
+            </Link>
+          ))}
         </div>
       </nav>
 
-      {/* TICKER */}
+      {/* BREAKING NEWS TICKER */}
       <div className="ticker-wrap container">
         <span className="live">● BREAKING</span>
+
         <div className="ticker">
-          <span>Parliament passes reform bill with majority vote</span> •
-          <span> India clinches series with last-ball six</span> •
-          <span> Sensex hits 80,000 mark</span> •
-          <span> Heavy rainfall alert in western coast</span>
+          <span>
+            Parliament passes reform bill with majority vote
+          </span>
+          {" • "}
+          <span>India clinches series with last-ball six</span>
+          {" • "}
+          <span>Sensex hits 80,000 mark</span>
+          {" • "}
+          <span>Heavy rainfall alert in western coast</span>
         </div>
       </div>
-
     </header>
   );
 }
-
-
-
-

@@ -18,35 +18,54 @@ function formatPlainTextToBlocks(text) {
   return parts.map((p, idx) => {
     const looksLikeHeading =
       /^[#]{0,6}\s*/.test(p) ||
-      /^heading\s*[:\-]/i.test(p) ||
-      (p.length <= 70 && /^[A-Z0-9\s\-–—]+$/.test(p.replace(/[^A-Za-z0-9]/g, "")));
+      /^heading\s*[:-]/i.test(p) ||
+      (p.length <= 70 &&
+        /^[A-Z0-9\s-–—]+$/.test(
+          p.replace(/[^A-Za-z0-9]/g, "")
+        ));
 
     if (looksLikeHeading) {
       const cleaned = p
         .replace(/^[#]{0,6}\s*/g, "")
-        .replace(/^heading\s*[:\-]\s*/i, "")
+        .replace(/^heading\s*[:-]\s*/i, "")
         .trim();
-      return { type: "h2", key: idx, text: cleaned || p };
+
+      return {
+        type: "h2",
+        key: idx,
+        text: cleaned || p,
+      };
     }
 
     // Heuristic for bulleted list (single block)
-    if (/^(\-|\*|•)\s+/.test(p)) {
+    if (/^(-|\*|•)\s+/.test(p)) {
       const items = p
         .split(/\n+/)
         .map((line) => line.trim())
-        .filter((line) => line)
-        .map((line) => line.replace(/^(\-|\*|•)\s+/, ""))
+        .filter(Boolean)
+        .map((line) => line.replace(/^(-|\*|•)\s+/, ""))
         .filter(Boolean);
 
-      if (items.length > 0) return { type: "ul", key: idx, items };
+      if (items.length > 0) {
+        return {
+          type: "ul",
+          key: idx,
+          items,
+        };
+      }
     }
 
-    return { type: "p", key: idx, text: p };
+    return {
+      type: "p",
+      key: idx,
+      text: p,
+    };
   });
 }
 
 export default function NewsDetails() {
   const { id } = useParams();
+
   const [news, setNews] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -63,15 +82,21 @@ export default function NewsDetails() {
         const payload = res?.data;
         const item = payload?.data;
 
-        if (mounted) setNews(item || null);
+        if (mounted) {
+          setNews(item || null);
+        }
       } catch (e) {
         if (mounted) {
           setError(
-            e?.response?.data?.message || e.message || "Failed to load news"
+            e?.response?.data?.message ||
+              e?.message ||
+              "Failed to load news"
           );
         }
       } finally {
-        if (mounted) setLoading(false);
+        if (mounted) {
+          setLoading(false);
+        }
       }
     }
 
@@ -103,41 +128,78 @@ export default function NewsDetails() {
           </Link>
         </div>
 
-        {loading ? <div style={{ padding: 20 }}>Loading...</div> : null}
-        {error ? <div style={{ padding: 20, color: "#b00" }}>{error}</div> : null}
+        {loading && (
+          <div style={{ padding: 20 }}>
+            Loading...
+          </div>
+        )}
 
-        {!loading && !error && news ? (
+        {error && (
+          <div
+            style={{
+              padding: 20,
+              color: "#b00",
+            }}
+          >
+            {error}
+          </div>
+        )}
+
+        {!loading && !error && news && (
           <div className="layout details-layout">
             <article className="details-article">
               <header className="details-header">
-                <div className="details-cat">{news.category}</div>
-                <h1 className="details-title">{news.title}</h1>
-                {news.editor?.name ? (
-                  <div className="details-meta">By {news.editor.name}</div>
-                ) : null}
+                <div className="details-cat">
+                  {news.category}
+                </div>
+
+                <h1 className="details-title">
+                  {news.title}
+                </h1>
+
+                {news.editor?.name && (
+                  <div className="details-meta">
+                    By {news.editor.name}
+                  </div>
+                )}
               </header>
 
-              {news.thumbnail ? (
+              {news.thumbnail && (
                 <img
                   className="details-image"
-                  alt={news.title}
                   src={news.thumbnail}
+                  alt={news.title}
                 />
-              ) : null}
+              )}
 
               <section className="details-content">
-                {blocks.length ? (
-                  blocks.map((b) => {
-                    if (b.type === "h2") return <h2 key={b.key}>{b.text}</h2>;
-                    if (b.type === "ul")
+                {blocks.length > 0 ? (
+                  blocks.map((block) => {
+                    if (block.type === "h2") {
                       return (
-                        <ul key={b.key}>
-                          {b.items.map((it, i) => (
-                            <li key={i}>{it}</li>
+                        <h2 key={block.key}>
+                          {block.text}
+                        </h2>
+                      );
+                    }
+
+                    if (block.type === "ul") {
+                      return (
+                        <ul key={block.key}>
+                          {block.items.map((item, index) => (
+                            <li key={index}>
+                              {item}
+                            </li>
                           ))}
                         </ul>
                       );
-                    return <p key={b.key}>{b.text}</p>;
+                    }
+
+                    return (
+                      <p key={block.key}>
+                        {block.text}
+                      </p>
+                    );
                   })
                 ) : (
                   <p>{news.description || ""}</p>
@@ -149,9 +211,8 @@ export default function NewsDetails() {
               <Sidebar />
             </aside>
           </div>
-        ) : null}
+        )}
       </main>
     </div>
   );
 }
-
