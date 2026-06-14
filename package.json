@@ -1,6 +1,5 @@
 {
   "name": "ganga-tv",
-  "homepage": "https://USERNAME.github.io/ganga-tv",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
